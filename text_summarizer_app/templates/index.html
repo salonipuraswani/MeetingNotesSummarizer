@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Text Summarizer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+    }
+
+    .container {
+      margin-top: 60px;
+      background-color: #fff;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 600px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 15px;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      resize: vertical;
+      font-size: 16px;
+    }
+
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      background-color: #6c63ff;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #5548d9;
+    }
+
+    .output-box {
+      margin-top: 30px;
+      background-color: #e0e0ff;
+      padding: 20px;
+      border-radius: 12px;
+      color: #333;
+      font-size: 16px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧠 AI Text Summarizer</h1>
+    <form method="post">
+      <textarea name="text" placeholder="Paste your text here..." required></textarea>
+      <button type="submit">Summarize</button>
+    </form>
+
+    {% if summary %}
+      <div class="output-box">
+        <strong>Summary:</strong><br>
+        {{ summary }}
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>
