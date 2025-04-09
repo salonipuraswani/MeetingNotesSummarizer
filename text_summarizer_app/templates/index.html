@@ -1,88 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>AI Text Summarizer</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f4f4f9;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      height: 100vh;
-    }
-
-    .container {
-      margin-top: 60px;
-      background-color: #fff;
-      border-radius: 16px;
-      padding: 30px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      width: 90%;
-      max-width: 600px;
-    }
-
-    h1 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 30px;
-    }
-
-    textarea {
-      width: 100%;
-      height: 150px;
-      padding: 15px;
-      border-radius: 12px;
-      border: 1px solid #ccc;
-      resize: vertical;
-      font-size: 16px;
-    }
-
-    button {
-      margin-top: 20px;
-      width: 100%;
-      padding: 12px;
-      background-color: #6c63ff;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-size: 18px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #5548d9;
-    }
-
-    .output-box {
-      margin-top: 30px;
-      background-color: #e0e0ff;
-      padding: 20px;
-      border-radius: 12px;
-      color: #333;
-      font-size: 16px;
-      white-space: pre-wrap;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Meeting Notes Summarizer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
   <div class="container">
-    <h1>🧠 AI Text Summarizer</h1>
-    <form method="post">
-      <textarea name="text" placeholder="Paste your text here..." required></textarea>
+    <h1>🎙️ Meeting Notes Summarizer</h1>
+    <p>Upload your meeting audio and get an instant summary!</p>
+
+    <form id="uploadForm">
+      <label for="audioFile" class="custom-file-upload">
+        Choose Audio File
+      </label>
+      <input type="file" id="audioFile" accept="audio/*" required />
       <button type="submit">Summarize</button>
     </form>
 
-    {% if summary %}
-      <div class="output-box">
-        <strong>Summary:</strong><br>
-        {{ summary }}
-      </div>
-    {% endif %}
+    <div id="summaryContainer" class="hidden">
+      <h2>📝 Summary</h2>
+      <p id="summaryText">Processing your file...</p>
+    </div>
   </div>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const summaryContainer = document.getElementById('summaryContainer');
+    const summaryText = document.getElementById('summaryText');
+  
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+  
+      const fileInput = document.getElementById('audioFile');
+      const file = fileInput.files[0];
+      if (!file) return;
+  
+      summaryContainer.classList.remove('hidden');
+      summaryText.textContent = 'Processing your file...';
+  
+      const formData = new FormData();
+      formData.append('audio', file);
+  
+      try {
+        const response = await fetch('http://127.0.0.1:5000/summarize', {
+          method: 'POST',
+          body: formData
+        });
+  
+        const data = await response.json();
+        summaryText.textContent = data.summary || 'No summary returned.';
+      } catch (err) {
+        console.error('Error:', err);
+        summaryText.textContent = 'Something went wrong. Please try again.';
+      }
+    });
+  </script>
+  
 </body>
 </html>
