@@ -1,14 +1,20 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
-from flask import render_template
-
+from faster_whisper import WhisperModel
+from transformers import pipeline
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for frontend-backend communication
+CORS(app)
 
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Load the model (use 'tiny', 'base', 'small', etc.)
+model = WhisperModel("small", compute_type="int8", device="cpu")  # good balance for CPU
+
+# Load the Hugging Face Summarizer
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
 @app.route('/', methods=['GET'])
 def home():
@@ -23,11 +29,25 @@ def summarize_audio():
     file_path = os.path.join(UPLOAD_FOLDER, audio.filename)
     audio.save(file_path)
 
-    # Simulate processing (Replace this with actual ML/audio summarization logic)
-    summary = f"This is a generated summary for: {audio.filename}. You can replace this with real logic."
+    try:
+        print("🟢 Starting transcription using faster-whisper...")
+        segments, info = model.transcribe(file_path, beam_size=5)
+        transcription = " ".join(segment.text for segment in segments)
 
-    return jsonify({'summary': summary})
+        print("✅ Transcription complete. Summarizing...")
 
+        # Summarize the transcription
+        summary = summarizer(transcription, max_length=1000, min_length=20, do_sample=False)
+
+        print("✅ Summary complete")
+        return jsonify({
+            'transcription': transcription,
+            'summary': summary[0]['summary_text']
+        })
+
+    except Exception as e:
+        print("🔥 Exception occurred during transcription or summarization:", e)
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)

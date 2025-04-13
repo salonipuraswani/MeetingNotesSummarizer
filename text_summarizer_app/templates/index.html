@@ -11,52 +11,66 @@
     <h1>🎙️ Meeting Notes Summarizer</h1>
     <p>Upload your meeting audio and get an instant summary!</p>
 
-    <form id="uploadForm">
+    <form id="uploadForm" enctype="multipart/form-data">
       <label for="audioFile" class="custom-file-upload">
         Choose Audio File
       </label>
-      <input type="file" id="audioFile" accept="audio/*" required />
+      <input type="file" id="audioFile" name="audio" accept="audio/*" required />
+      <div id="fileNameDisplay" class="file-name-display">No file selected</div>
+
       <button type="submit">Summarize</button>
     </form>
 
     <div id="summaryContainer" class="hidden">
       <h2>📝 Summary</h2>
+      <h3>Full Transcription:</h3>
+      <p id="transcriptionText">Processing your file...</p>
+      
+      <h3>Summary:</h3>
       <p id="summaryText">Processing your file...</p>
     </div>
   </div>
 
   <script>
     const form = document.getElementById('uploadForm');
+    const audioInput = document.getElementById('audioFile');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
     const summaryContainer = document.getElementById('summaryContainer');
+    const transcriptionText = document.getElementById('transcriptionText');
     const summaryText = document.getElementById('summaryText');
-  
+
+    audioInput.addEventListener('change', () => {
+      const file = audioInput.files[0];
+      fileNameDisplay.textContent = file ? `🎧 Selected: ${file.name}` : 'No file selected';
+    });
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-  
-      const fileInput = document.getElementById('audioFile');
-      const file = fileInput.files[0];
+
+      const file = audioInput.files[0];
       if (!file) return;
-  
+
       summaryContainer.classList.remove('hidden');
+      transcriptionText.textContent = 'Processing your file...';
       summaryText.textContent = 'Processing your file...';
-  
+
       const formData = new FormData();
       formData.append('audio', file);
-  
+
       try {
         const response = await fetch('http://127.0.0.1:5000/summarize', {
           method: 'POST',
           body: formData
         });
-  
+
         const data = await response.json();
+        transcriptionText.textContent = data.transcription || 'No transcription returned.';
         summaryText.textContent = data.summary || 'No summary returned.';
       } catch (err) {
-        console.error('Error:', err);
-        summaryText.textContent = 'Something went wrong. Please try again.';
+        transcriptionText.textContent = 'Something went wrong with the transcription.';
+        summaryText.textContent = 'Please try again.';
       }
     });
   </script>
-  
 </body>
 </html>
