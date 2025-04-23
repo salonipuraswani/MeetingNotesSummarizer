@@ -7,27 +7,37 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
+  <h1 class="heading"> MEETING NOTES SUMMARIZER</h1>
+  <div class="quote">"Capture conversations. Extract clarity. Make meetings meaningful."</div>
   <div class="container">
-    <h1>🎙️ Meeting Notes Summarizer</h1>
-    <p>Upload your meeting audio and get an instant summary!</p>
+    <p class="text-class">Upload your meeting audio and get an instant summary!</p>
 
     <form id="uploadForm" enctype="multipart/form-data">
       <label for="audioFile" class="custom-file-upload">
         Choose Audio File
       </label>
       <input type="file" id="audioFile" name="audio" accept="audio/*" required />
-      <div id="fileNameDisplay" class="file-name-display">No file selected</div>
+      <div id="fileNameDisplay" class="text-class">No file selected</div>
 
-      <button type="submit">Summarize</button>
+      <button type="submit" class="summarize-button">Summarize</button>
     </form>
 
     <div id="summaryContainer" class="hidden">
-      <h2>📝 Summary</h2>
-      <h3>Full Transcription:</h3>
+      <h2> Summary</h2>
+
+      <h3> Full Transcription:</h3>
       <p id="transcriptionText">Processing your file...</p>
-      
-      <h3>Summary:</h3>
-      <p id="summaryText">Processing your file...</p>
+
+      <h3> Abstractive Summary:</h3>
+      <p id="summaryText" class:"summary-text">Processing your file...</p>
+
+      <h3> Detected Speakers:</h3>
+      <ul id="speakerList" class:"summary-text"></ul>
+
+      <h3> Mentioned Dates:</h3>
+      <ul id="dateList" class:"summary-text"></ul>
+
+      <button id="downloadPDFButton" style="display: none;">Download Summary as PDF</button>
     </div>
   </div>
 
@@ -38,6 +48,11 @@
     const summaryContainer = document.getElementById('summaryContainer');
     const transcriptionText = document.getElementById('transcriptionText');
     const summaryText = document.getElementById('summaryText');
+    const speakerList = document.getElementById('speakerList');
+    const dateList = document.getElementById('dateList');
+    const downloadBtn = document.getElementById('downloadPDFButton');
+
+    let extractedData = {};
 
     audioInput.addEventListener('change', () => {
       const file = audioInput.files[0];
@@ -53,22 +68,63 @@
       summaryContainer.classList.remove('hidden');
       transcriptionText.textContent = 'Processing your file...';
       summaryText.textContent = 'Processing your file...';
+      speakerList.innerHTML = '';
+      dateList.innerHTML = '';
+      downloadBtn.style.display = 'none';
 
       const formData = new FormData();
       formData.append('audio', file);
 
       try {
-        const response = await fetch('http://127.0.0.1:5000/summarize', {
+        const response = await fetch('/summarize', {
           method: 'POST',
           body: formData
         });
 
         const data = await response.json();
+
         transcriptionText.textContent = data.transcription || 'No transcription returned.';
         summaryText.textContent = data.summary || 'No summary returned.';
+        extractedData = data;
+
+        (data.speakers || []).forEach(name => {
+          const li = document.createElement('li');
+          li.textContent = name;
+          speakerList.appendChild(li);
+        });
+
+        (data.dates || []).forEach(date => {
+          const li = document.createElement('li');
+          li.textContent = date;
+          dateList.appendChild(li);
+        });
+
+        downloadBtn.style.display = 'block';
+
       } catch (err) {
+        console.error(err);
         transcriptionText.textContent = 'Something went wrong with the transcription.';
         summaryText.textContent = 'Please try again.';
+      }
+    });
+
+    downloadBtn.addEventListener('click', async () => {
+      try {
+        const response = await fetch('/download-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(extractedData)
+        });
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'meeting_summary.pdf';
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        alert('Failed to download PDF. Try again.');
       }
     });
   </script>
