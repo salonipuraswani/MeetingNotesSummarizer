@@ -1,0 +1,8 @@
+Dowload python version 3.10
+Activate its virtual environment with commands:
+py -3.10 -m venv venv310
+venv310\Scripts\activate
+
+Python –version   (check - if its 3.10 then run the further commands)
+Pip install Flask flask-cors openai-whisper transformers faster-whisper torch sentencepiece spacy
+python -m spacy download en_core_web_sm
